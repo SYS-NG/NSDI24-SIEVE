@@ -38,6 +38,7 @@ set(sourceC
         other/S3LRU.c
 
         Sieve.c
+        Sieve_Size.c
 
 )
 

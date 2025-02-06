@@ -126,6 +126,10 @@ typedef struct {
 } __attribute__((packed)) Sieve_obj_params_t;
 
 typedef struct {
+  int32_t freq;
+} __attribute__((packed)) Sieve_size_obj_params_t;
+
+typedef struct {
   int64_t next_access_vtime;
   int32_t freq;
 } __attribute__((packed)) misc_metadata_t;
@@ -171,6 +175,7 @@ typedef struct cache_obj {
     LIRS_obj_metadata_t LIRS;
     S3FIFO_obj_metadata_t S3FIFO;
     Sieve_obj_params_t sieve;
+    Sieve_size_obj_params_t sieve_size;
 
 #if defined(ENABLE_GLCACHE) && ENABLE_GLCACHE == 1
     GLCache_obj_metadata_t GLCache;

@@ -1,19 +1,23 @@
 #!/bin/bash 
 
 setup_ubuntu() {
+	echo "Setting up Ubuntu..."
 	sudo apt update
 	sudo apt install -yqq libglib2.0-dev libgoogle-perftools-dev build-essential cmake google-perftools xxhash
 }
 
 setup_centos() {
+	echo "Setting up CentOS..."
 	sudo yum install glib2-devel google-perftools-devel
 }
 
 setup_macOS() {
+	echo "Setting up macOS..."
 	brew install glib google-perftools argp-standalone xxhash
 }
 
 setup_xgboost() {
+    echo "Setting up XGBoost..."
     pushd /tmp/
 	git clone --recursive https://github.com/dmlc/xgboost
 	pushd xgboost
@@ -23,12 +27,13 @@ setup_xgboost() {
 	if [[ $GITHUB_ACTIONS == "true" ]]; then
 		make
 	else
-		make -j
+		make -j4
 	fi
 	sudo make install
 }
 
 setup_lightgbm() {
+    echo "Setting up LightGBM..."
     pushd /tmp/
 	git clone --recursive https://github.com/microsoft/LightGBM
 	pushd LightGBM
@@ -38,12 +43,13 @@ setup_lightgbm() {
 	if [[ $GITHUB_ACTIONS == "true" ]]; then
 		make
 	else
-		make -j
+		make -j4
 	fi
 	sudo make install
 }
 
 setup_zstd() {
+    echo "Setting up Zstd..."
     pushd /tmp/
     wget https://github.com/facebook/zstd/releases/download/v1.5.0/zstd-1.5.0.tar.gz
     tar xvf zstd-1.5.0.tar.gz;
@@ -51,7 +57,7 @@ setup_zstd() {
     mkdir _build;
     pushd _build/;
     cmake ..
-    make -j
+    make -j4
     sudo make install
 }
 

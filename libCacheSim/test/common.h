@@ -254,6 +254,8 @@ static cache_t *create_test_cache(const char *alg_name,
     cache = S3FIFO_init(cc_params, "move-to-main-threshold=2");
   } else if (strcasecmp(alg_name, "Sieve") == 0) {
     cache = Sieve_init(cc_params, NULL);
+  } else if (strcasecmp(alg_name, "Sieve-Size") == 0) {
+    cache = Sieve_size_init(cc_params, NULL);
   } else if (strcasecmp(alg_name, "Mithril") == 0) {
     cache = LRU_init(cc_params, NULL);
     cache->prefetcher =

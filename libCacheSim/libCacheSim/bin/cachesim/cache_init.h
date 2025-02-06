@@ -136,6 +136,8 @@ static inline cache_t *create_cache(const char *trace_path,
     cache = S3FIFOd_init(cc_params, eviction_params);
   } else if (strcasecmp(eviction_algo, "qdlp") == 0) {
     cache = QDLP_init(cc_params, eviction_params);
+  } else if (strcasecmp(eviction_algo, "sieve_size") == 0) {
+    cache = Sieve_size_init(cc_params, eviction_params);
   } else if (strcasecmp(eviction_algo, "sieve") == 0) {
     cache = Sieve_init(cc_params, eviction_params);
 #ifdef ENABLE_GLCACHE

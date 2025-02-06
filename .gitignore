@@ -14,3 +14,7 @@ example/cacheSimulatorC/cmake-build-debug
 fig/
 # Chaos
 sftp-config.json
+zipf_1.0.pdf
+result
+libCacheSim/result
+libCacheSim/trace.oracleGeneral.bin.cachesim
