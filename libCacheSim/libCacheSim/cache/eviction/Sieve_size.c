@@ -12,6 +12,7 @@ typedef struct {
   cache_obj_t *q_tail;
 
   cache_obj_t *pointer;
+  int          eviction_window_size;
 } Sieve_size_params_t;
 
 // ***********************************************************************
@@ -65,9 +66,9 @@ cache_t *Sieve_size_init(const common_cache_params_t ccache_params,
   memset(cache->eviction_params, 0, sizeof(Sieve_size_params_t));
   Sieve_size_params_t *params = (Sieve_size_params_t *)cache->eviction_params;
   params->pointer = NULL;
-  params->q_head = NULL;
-  params->q_tail = NULL;
-
+  params->q_head  = NULL;
+  params->q_tail  = NULL;
+  params->eviction_window_size = 100; 
   return cache;
 }
 
@@ -189,6 +190,37 @@ static cache_obj_t *Sieve_size_to_evict_with_freq(cache_t *cache,
   return pointer;
 }
 
+static cache_obj_t *Sieve_size_evict_largest_from_window(cache_t *cache, cache_obj_t *first_obj_in_window, int to_evict_freq) {
+  Sieve_size_params_t *params     = cache->eviction_params;
+  cache_obj_t *pointer            = first_obj_in_window;
+  cache_obj_t *eviction_candidate = first_obj_in_window;
+  int         window_remainder    = params->eviction_window_size;
+  
+
+  while (window_remainder-- > 0) {
+
+    /* if we have run one full around or first eviction */
+    if (pointer == NULL) pointer = params->q_tail;
+
+    if (eviction_candidate == NULL || pointer->obj_size > eviction_candidate->obj_size) {
+      eviction_candidate = pointer;
+    }
+    
+    // // Only consider objects whose frequency is <= the threshold.
+    // if (pointer->sieve_size.freq <= to_evict_freq) {
+    //   // Choose the object with the largest size.
+    //   if (eviction_candidate == NULL || pointer->obj_size > eviction_candidate->obj_size) {
+    //     eviction_candidate = pointer;
+    //   }
+    // }
+    // Move to the next object in the list.
+    pointer = pointer->queue.prev;
+  }
+
+  return eviction_candidate;
+}
+
+
 static cache_obj_t *Sieve_size_to_evict(cache_t *cache, const request_t *req) {
   // because we do not change the frequency of the object,
   // if all objects have frequency 1, we may return NULL
@@ -202,6 +234,8 @@ static cache_obj_t *Sieve_size_to_evict(cache_t *cache, const request_t *req) {
 
     obj_to_evict = Sieve_size_to_evict_with_freq(cache, req, to_evict_freq);
   }
+
+  obj_to_evict = Sieve_size_evict_largest_from_window(cache, obj_to_evict, to_evict_freq);
 
   return obj_to_evict;
 }
@@ -226,9 +260,16 @@ static void Sieve_size_evict(cache_t *cache, const request_t *req) {
     obj = obj->queue.prev == NULL ? params->q_tail : obj->queue.prev;
   }
 
-  params->pointer = obj->queue.prev;
-  remove_obj_from_list(&params->q_head, &params->q_tail, obj);
-  cache_evict_base(cache, obj, true);
+  cache_obj_t *obj_to_evict = Sieve_size_evict_largest_from_window(cache, obj, 0);
+
+  if (obj_to_evict == obj) {
+    params->pointer = obj->queue.prev;
+  } else {
+    params->pointer = obj;
+  }
+  
+  remove_obj_from_list(&params->q_head, &params->q_tail, obj_to_evict);
+  cache_evict_base(cache, obj_to_evict, true);
 }
 
 static void Sieve_size_remove_obj(cache_t *cache, cache_obj_t *obj_to_remove) {

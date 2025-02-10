@@ -64,6 +64,11 @@ def run_cachesim_size(
 
     logger.debug('running "{}"'.format(" ".join(run_args)))
 
+    if ignore_obj_size:
+        logger.info("Ignoring object size in the simulation.")
+    else:
+        logger.info("Not ignoring object size in the simulation.")
+
     p = subprocess.run(run_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if p.returncode != 0:
         logger.warning("cachesim may have crashed with segfault")
@@ -233,15 +238,20 @@ if __name__ == "__main__":
     ap = p.parse_args()
 
     if ap.test:
+        logger.info("Running in test mode")
         run()
         sys.exit(0)
 
     if ap.verbose:
         logger.setLevel(logging.DEBUG)
+        logger.info("Verbose mode enabled")
     else:
         logger.setLevel(logging.INFO)
 
     dataname = extract_dataname(ap.tracepath)
+    logger.info(f"Running in normal mode")
+    logger.info(f"Extracted dataname: {dataname}")
+
     mrc_dict = run_cachesim_size(
         ap.tracepath,
         ap.algos.replace(" ", ""),
@@ -254,11 +264,14 @@ if __name__ == "__main__":
     )
 
     if len(mrc_dict) == 0:
-        logger.error("fail to compute mrc")
+        logger.error("Failed to compute mrc")
         sys.exit(1)
+    else:
+        logger.info("Successfully computed mrc")
 
     with open("/tmp/{}.mrc.pickle".format(dataname), "wb") as f:
         pickle.dump(mrc_dict, f)
+        logger.info(f"Saved mrc data to /tmp/{dataname}.mrc.pickle")
 
     plot_mrc_size(
         mrc_dict,
